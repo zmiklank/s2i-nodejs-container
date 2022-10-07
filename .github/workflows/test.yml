@@ -1,0 +1,21 @@
+on:
+  issue_comment:
+    types:
+      - created
+jobs:
+  container-tests:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Obtain envvars from PR's comment
+        id: user_defined
+        shell: bash
+        run : |
+          _comment=${{ github.event.comment.body }}
+          _vars=$(echo $_comment | grep -Eo '\[ENV:.*\]' | cut -d':' -f2 | tr -d ']')
+          echo "::set-output name=VARS::${_vars}"
+
+      - name: Schedule tests for ${{ matrix.version }} - ${{ matrix.context }}
+        id: github_action
+        shell: bash
+        run: |
+          echo "PR_NUMBER=${{ github.event.issue.number }};TEST_NAME=test;${{ steps.user_defined.outputs.VARS }}"
